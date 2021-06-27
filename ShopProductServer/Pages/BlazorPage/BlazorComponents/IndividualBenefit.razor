@@ -1,0 +1,18 @@
+﻿@using Model 
+<div class="bg-light border p-2 col-5 offset-1" @onclick="(args) => ChangeBenefitSelected(args, Benefit.Name)">
+    <h4 class="text-secondary">
+        Benefit : @Benefit.Id
+    </h4>
+    @Benefit.Name<br />
+    @Benefit.Description<br />
+</div>
+@code {
+    [Parameter]
+    public BenefitBook Benefit { get; set; }
+    [Parameter]
+    public EventCallback<string> OnBenefitSelected { get; set; }
+    protected async Task ChangeBenefitSelected(MouseEventArgs e, string name)
+    {
+        await OnBenefitSelected.InvokeAsync((string)name);
+    }
+}

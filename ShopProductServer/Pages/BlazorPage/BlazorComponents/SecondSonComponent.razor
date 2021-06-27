@@ -1,0 +1,13 @@
+﻿<div>
+    <h4 class="text-primary" pt-3>SecondSonComponent</h4>
+    <input id="bookName" class="form-control" placeholder=@PlaceHolder required="@Required" maxlength="@MaxLength"/>
+</div>
+@code {
+    [Parameter]
+    public string PlaceHolder { get; set; } = "Inicial Text";
+    [Parameter]
+    public string Required { get; set; } = "Required";
+    [Parameter]
+    public string MaxLength { get; set; } = "10";
+
+}

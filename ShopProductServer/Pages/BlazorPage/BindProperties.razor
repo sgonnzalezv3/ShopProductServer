@@ -1,0 +1,104 @@
+﻿@page "/bindProperties"
+@using Model;
+<div class="bg-lighy border p-2">
+
+    <h2 class="bg-light border p-2">
+        First Book
+    </h2>
+    Libro : @Book.Name
+    <br />
+    Libro : @Book.Price
+    <br />
+    <input type="number" @bind-value="@Book.Price" />
+    <br />
+
+    Is Exhausted?
+    <input type="checkbox" @bind-value="@Book.Exhausted" checked="@(Book.Exhausted ? "check" : null)" />
+    <br />
+    <span>This book is: @(Book.Exhausted ? "Exhausted" : "Available")</span>
+    <select @bind="TypeBookSelected">
+        @foreach (var type in Book.TypeBook)
+        {
+            <option value="@type.Name">@type.Name</option>
+        }
+    </select>
+    <span>The book's type is : @TypeBookSelected</span>
+</div>
+<div>
+    <br />
+    <h2 class="text-info">
+        Lista de Libros
+    </h2>
+    <table class="table table-dark">
+        @foreach(var book in BookList)
+         {
+                <tr>
+                    <td>
+                        <input type="text" @bind-value="book.Name" @bind-value:event="oninput"/>
+                    </td>
+                    <td>
+                        <input type="text" @bind-value="book.Price" @bind-value:event="oninput"/>
+                    </td>
+                    @foreach(var bookType in book.TypeBook)
+                     {
+                        <td>@bookType.Name - @bookType.Value</td>
+                     }
+                </tr>
+         }
+    </table>
+    <br />
+    @foreach(var book in BookList)
+            {
+                <p>@book.Name has a price of @book.Price</p>
+            }
+</div>
+
+@code{
+    /* va almacenar el dato name seleccionado en el select */
+    string TypeBookSelected = "";
+    /* Lista */
+    List<BlazorBook> BookList = new List<BlazorBook>();
+    /* Nueva instancia de Libro */
+    BlazorBook Book = new BlazorBook()
+    {
+        Id = 101,
+        Name = "Basic C#",
+        Exhausted = true,
+        Price = 50000,
+        TypeBook = new List<TypeBook>
+            {
+                new TypeBook{Id = 1 , Name = "Docker" , Value = "10000"  },
+                new TypeBook{Id = 1 , Name = "Kubernetes" , Value = "5000"  }
+            }
+    };
+    /* En este Componente se pone todo lo que se va ejecutar al ser inicializado  */
+    protected override void OnInitialized()
+    {
+        base.OnInitialized();
+        BookList.Add(new BlazorBook()
+        {
+            Id = 101,
+            Name = "Basic C#",
+            Exhausted = true,
+            Price = 50000,
+            TypeBook = new List<TypeBook>
+            {
+                new TypeBook{Id = 1 , Name = "Docker" , Value = "10000"  },
+                new TypeBook{Id = 1 , Name = "Kubernetes" , Value = "5000"  }
+            }
+        });
+        BookList.Add(new BlazorBook()
+        {
+            Id = 102,
+            Name = "Intermediate C#",
+            Exhausted = true,
+            Price = 300000,
+            TypeBook = new List<TypeBook>
+        {
+                new TypeBook{Id = 1 , Name = "GRPC" , Value = "10000"  },
+                new TypeBook{Id = 1 , Name = "RabbitMQ" , Value = "5000"  }
+            }
+        });
+    }
+}
+

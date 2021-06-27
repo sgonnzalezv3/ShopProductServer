@@ -1,0 +1,27 @@
+﻿@page "/fatherComponent"
+<h1>FatherComponent - Son</h1>
+<SonComponent OnClickButtonMethod="ShowMessage" Title="First Son Component">
+    <ChildContent>
+        Show Content of RenderFragment from principal Component
+    </ChildContent>
+    <SecondChildContent>
+        Second Content from RenderFragment
+    </SecondChildContent>
+</SonComponent>
+<SecondSonComponent PlaceHolder="Insert name of the book Parameter" MaxLength="5">
+
+</SecondSonComponent>
+<p>
+    <b>
+        @TextMessage
+    </b>
+</p>
+<SonComponent Title="Second Son Component">
+</SonComponent>
+@code {
+    private string TextMessage = "";
+    private void ShowMessage(MouseEventArgs e)
+    {
+        TextMessage = "Text from father's component";
+    }
+}

@@ -1,0 +1,109 @@
+﻿@page "/shopDemo"
+@using Model;
+<div class="bg-lighy border p-2">
+    Hptaa solo millos
+</div>
+<div class="border p-2 mt-2" style="background-color: azure">
+    <h2 class="text-info">
+        Book List
+    </h2>
+    <span>Books Selected: @BookSelected</span>
+    <div class="row container">
+        <div class="col-12 mt-4">
+            <h4 class="text-info">
+                Books of shop
+            </h4>
+        </div>
+        @foreach (var book in BookList)
+        {
+            <IndividualBook OnBookSelectedCheckBox="ChangeCount" Book="@book"></IndividualBook>
+        }
+
+        <div class="col-12 mt-4">
+            <h4 class="text-info">
+                Book Benefits
+            </h4>
+        </div>
+        @foreach (var benefit in BenefitList)
+        {
+            <IndividualBenefit OnBenefitSelected="@ChangeBenefit" Benefit="@benefit"></IndividualBenefit>
+        }
+    </div>
+    <div class="col-12">
+        <p class="text-secondary">Benefit Selected: @BenefitSelected</p>
+    </div>
+</div>
+@code{
+    /* Contado checkbox seleccionados de libros */
+    public int BookSelected { get; set; } = 0;
+    /* Contado checkbox seleccionados de libros */
+
+    public string BenefitSelected { get; set; } = "";
+    /* Lista */
+    List<BlazorBook> BookList = new List<BlazorBook>();
+    List<BenefitBook> BenefitList = new List<BenefitBook>();
+
+    /* En este Componente se pone todo lo que se va ejecutar al ser inicializado  */
+    protected override void OnInitialized()
+    {
+        base.OnInitialized();
+        BookList.Add(new BlazorBook()
+        {
+            Id = 101,
+            Name = "Basic C#",
+            Exhausted = true,
+            Price = 50000,
+            TypeBook = new List<TypeBook>
+            {
+                new TypeBook{Id = 1 , Name = "Docker" , Value = "10000"  },
+                new TypeBook{Id = 1 , Name = "Kubernetes" , Value = "5000"  }
+            }
+        });
+        BookList.Add(new BlazorBook()
+        {
+            Id = 102,
+            Name = "Intermediate C#",
+            Exhausted = true,
+            Price = 300000,
+            TypeBook = new List<TypeBook>
+        {
+                new TypeBook{Id = 1 , Name = "GRPC" , Value = "10000"  },
+                new TypeBook{Id = 1 , Name = "RabbitMQ" , Value = "5000"  }
+            }
+        });
+        BenefitList.Add(new BenefitBook
+        {
+            Id = 111,
+            Name = " Its Free",
+            Description = "If you buy a book we give you other book for free"
+        });
+        BenefitList.Add(new BenefitBook
+        {
+            Id = 222,
+            Name = " 50% OFF!",
+            Description = "We have the best prices"
+        });
+        BenefitList.Add(new BenefitBook
+        {
+            Id = 333,
+            Name = " Unique",
+            Description = "This is the last book of our shop"
+        });
+    }
+    protected void ChangeCount(bool isSelected)
+    {
+        if (isSelected)
+        {
+            BookSelected++;
+        }
+        else
+        {
+            BookSelected--;
+        }
+    }
+    protected void ChangeBenefit(string benefit)
+    {
+        BenefitSelected = benefit;
+    }
+}
+

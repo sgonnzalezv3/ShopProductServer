@@ -1,0 +1,38 @@
+﻿@using ShopProductServer.Model;
+
+<div class="bg-light border p-2 col-5 offset-1">
+    <h4 class="text-secondary">
+        Book : @book.Id
+    </h4>
+    <input type="checkbox" @onchange="ChangeBookSelectedCheckBox"/>
+    @book.Name
+    <br />
+    @book.Price.ToString("c")
+    <br />
+    <input type="checkbox" @bind-value="book.Exhausted" checked="@(book.Exhausted ? "checked" : null)" />
+    Is Exhausted
+    <br />
+    <span>
+        This book is: @(book.Exhausted ? "Exhausted" : "Available")
+    </span>
+    @if (!book.Exhausted)
+    {
+        @foreach (var bookType in book.TypeBook)
+        {
+            <p>@bookType.Name - @bookType.Value</p>
+        }
+    }
+    <ShopProductServer.Pages.BlazorPage.BlazorComponents.EditDeleteButtons IsAdmin="true"></ShopProductServer.Pages.BlazorPage.BlazorComponents.EditDeleteButtons>
+</div>
+
+@code {
+    [Parameter]
+    public BlazorBook book { get; set; }
+    [Parameter]
+    public EventCallback<bool> OnBookSelectedCheckBox { get; set; }
+
+    protected async Task ChangeBookSelectedCheckBox(ChangeEventArgs e)
+    {
+        await OnBookSelectedCheckBox.InvokeAsync((bool)e.Value);
+    }
+}
