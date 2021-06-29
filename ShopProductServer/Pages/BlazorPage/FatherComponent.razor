@@ -1,6 +1,6 @@
 ﻿@page "/fatherComponent"
 <h1>FatherComponent - Son</h1>
-<SonComponent OnClickButtonMethod="ShowMessage" Title="First Son Component">
+<SonComponent  @ref="sonComp" OnClickButtonMethod="ShowMessage" Title="First Son Component">
     <ChildContent>
         Show Content of RenderFragment from principal Component
     </ChildContent>
@@ -16,9 +16,14 @@
         @TextMessage
     </b>
 </p>
+<div class="row">
+    <button class="btn btn-success" @onclick="()=> sonComp.ShowToastrSuccess()">Show Alerts!</button>
+</div>
 <SonComponent Title="Second Son Component">
 </SonComponent>
 @code {
+    /* Creando un componente hijo PRIVADO, para poder acceder al componente hijo para poder acceder a los métodos que contiene*/
+    private SonComponent sonComp;
     private string TextMessage = "";
     private void ShowMessage(MouseEventArgs e)
     {

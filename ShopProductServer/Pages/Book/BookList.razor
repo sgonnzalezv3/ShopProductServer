@@ -1,0 +1,60 @@
+﻿@page "/book"
+@using Models;
+@using business.Repository.IRepository
+@inject IBookRepository BookRepository
+
+<div class="row mt-4">
+    <div class="col-8">
+        <h4 class="card-title text-primary">Books</h4>
+    </div>
+    <div class="col-3 offset-1">
+        <NavLink href="book/add" class="btn btn-primary form-control">Add New Book</NavLink>
+    </div>
+</div>
+<div class="row mt-4">
+    <div class="col-12">
+        <table class="table table-bordered">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Price</th>
+                    <th>Author</th>
+                    <th>Details</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (Books.Any())
+                 {
+                    @foreach(var book in Books)
+                {
+                        <tr>
+                            <td>@book.Name</td>
+                            <td>@book.Price.ToString("c")</td>
+                            <td>@book.Author</td>
+                            <td>@book.Details</td>
+                            <td>
+                                <NavLink href="@($"book/update/{book.Id}")" class="btn btn-primary"> Update </NavLink>
+                            </td>
+                        </tr>
+                }
+            }
+            else
+            {
+                <tr>
+                    <td colspan="5">Nothing Here...</td>
+                </tr>
+            }
+            </tbody>
+        </table>
+    </div>
+</div>
+@code {
+    private IEnumerable<BookDto> Books { get; set; } = new List<BookDto>();
+    /* Metodo que realiza acciones cuando se inicializa la pagina */
+    protected override async Task OnInitializedAsync()
+    {
+        /* Cargando los libros */
+        Books = await BookRepository.GetBookList();
+    }
+}

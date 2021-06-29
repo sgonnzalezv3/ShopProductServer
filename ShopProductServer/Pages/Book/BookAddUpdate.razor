@@ -1,0 +1,208 @@
+﻿@page "/book/add"
+@page "/book/update/{Id:int}"
+@using Models;
+@using business.Repository.IRepository
+@using ShopProductServer.Service.IService
+@inject IBookRepository BookRepository
+@inject IBookImgRepository BookImgRepository
+@inject NavigationManager NavigationManager
+@inject IJSRuntime JsRuntime
+@inject IFileUpload FileUpload
+
+<div class="row mt-2 mb-5">
+    <h3 class="card-title text-primary mb-3 ml-3">
+        Book @Title
+    </h3>
+    <div class="col-md-12">
+        <EditForm Model="BookModel" OnValidSubmit="HandleBook">
+            <DataAnnotationsValidator />
+            @*<ValidationSummary />*@
+            <div class="form-group">
+                <label>Name</label>
+                <InputText @bind-Value="BookModel.Name" class="form-control"></InputText>
+                <ValidationMessage For="() => BookModel.Name"></ValidationMessage>
+            </div>
+            <div class="form-group">
+                <label>Price</label>
+                <InputNumber @bind-Value="BookModel.Price" class="form-control"></InputNumber>
+                <ValidationMessage For="() => BookModel.Price"></ValidationMessage>
+
+            </div>
+            <div class="form-group">
+                <label>Author</label>
+                <InputText @bind-Value="BookModel.Author" class="form-control"></InputText>
+                <ValidationMessage For="() => BookModel.Author"></ValidationMessage>
+
+            </div>
+            <div class="form-group">
+                <label>Details</label>
+                <InputTextArea @bind-Value="BookModel.Details" class="form-control"></InputTextArea>
+            </div>
+            <div class="form-group">
+                <InputFile OnChange="HandleImgUpload" multiple></InputFile>
+                <div class="row">
+                    @if (BookModel.UrlImages != null && BookModel.UrlImages.Count > 0)
+                    {
+                        int counter = 1;
+                        @foreach (var bookimage in BookModel.UrlImages)
+                        {
+                            <div class="col-md-2 mt-3">
+                                <div class="book-img" style="background: url('@bookimage') 50% 50%">
+                                    <span class="book-img-title">@counter</span>
+                                </div>
+                                <button type="button" class="btn btn-outline-danger btn-block" mt-4>Delete</button>
+                            </div>
+                            counter++;
+                        }
+                    }
+                </div>
+            </div>
+            <div class="form-group">
+                <button class="btn btn-primary">Book @Title</button>
+                <NavLink href="book" class="btn btn-secondary">Back to List</NavLink>
+            </div>
+        </EditForm>
+    </div>
+</div>
+@code {
+    /* Parametro Id para actualizar libro y ponerlo en la URL */
+    [Parameter]
+    public int? Id { get; set; }
+    private BookImgDto BookImg { get; set; } = new BookImgDto();
+    private BookDto BookModel { get; set; } = new BookDto();
+    private string Title { get; set; } = "Add";
+
+    protected async override Task OnInitializedAsync()
+    {
+        /* Si es diferente de nulo, tenemos que actualizar */
+        if (Id != null)
+        {
+            /* Cambiar a actualizar */
+            Title = "Update";
+            /* Busqueda por ID para actualizar y lo ponemos en el objeto ya existente*/
+            BookModel = await BookRepository.GetBook(Id.Value);
+        }/* En caso contrario tenemos que crear */
+        else
+        {
+            /* Si es nulo o no exista */
+            BookModel = new BookDto();
+        }
+    }
+
+    public async Task HandleBook()
+    {
+        /* tenemos el metodo BookNameExists que verifica si el nombre es único o no
+            esto no funciona en un update o actualizar ya que devolvera el mismo objeto que se está
+            actualizando, lo que conllevara a que la condicion piense que hay libros duplicados.
+        */
+        try
+        {
+            /* Validar existencia del nombre (unico) */
+            var bookNameExists = await BookRepository.BookNameExists(BookModel.Name, BookModel.Id);
+
+            if (bookNameExists != null)
+            {
+                await JsRuntime.ToastrError("This book already exists");
+                return;
+            }
+            /* Definir si vamos a actualizar o a agregar */
+            if (BookModel.Id != 0 && Title == "Update")
+            {
+                var resultUpdate = await BookRepository.UpdateBook(BookModel.Id, BookModel);
+                await JsRuntime.ToastrSuccess("Book Update Successfully");
+            }
+            else
+            {
+                /* Si no existe, envia el objeto libro al metodo AddBook */
+                var addResult = await BookRepository.AddBook(BookModel);
+                /* Agregar las imagenes con esto podemos extraer el id de un libro y sus detalles*/
+                await AddBookImg(addResult);
+                await JsRuntime.ToastrSuccess("Book Created Successfully");
+            }
+        }
+        catch (Exception e)
+        {
+
+            throw;
+        }
+
+        /* Redireccionando */
+        NavigationManager.NavigateTo("book");
+    }
+    private async Task HandleImgUpload(InputFileChangeEventArgs e)
+    {
+        try
+        {
+            /* Instancia de lista de Imagenes */
+            var imgList = new List<string>();
+            /* Recuperar todas las imagenes o archivos */
+            if (e.GetMultipleFiles().Count > 0)
+            {
+                /* Para cada archivo o imagen*/
+                foreach (var img in e.GetMultipleFiles())
+                {
+                    /* Objeto fileInfo que contreda el objeto de cada archivo */
+                    /* Para obtener la ext y asegurarse de que sean imagenes */
+                    System.IO.FileInfo fileInfo = new System.IO.FileInfo(img.Name);
+                    /* Validar las Siguientes Extensiones */
+                    if (fileInfo.Extension.ToLower() == ".jpg" || fileInfo.Extension.ToLower() == ".png" || fileInfo.Extension.ToLower() == ".jpeg")
+                    {
+                        /*si la ruta es correcta, se sube el archivo */
+                        /* Devuelve la ruta */
+                        var imageUploadedPath = await FileUpload.UploadFile(img);
+                        /* Se almacena la ruta a la lista de imagenes */
+                        imgList.Add(imageUploadedPath);
+                    }
+                    else
+                    {
+                        await JsRuntime.ToastrError("Please select Images with format .jpg|.png|.jpeg");
+                        return;
+
+                    }
+                }
+                /* Verificar si existen imagenes dentro de la lista */
+                if (imgList.Any())
+                {
+
+                    if (BookModel.UrlImages != null && BookModel.UrlImages.Any())
+                    {
+                        /* Se agregan las imagenes */
+                        BookModel.UrlImages.AddRange(imgList);
+                    }
+                    else
+                    {
+                        /* se inicializa una lista nueva*/
+                        BookModel.UrlImages = new List<string>();
+                        /* Se agregan las Imagenes. */
+                        BookModel.UrlImages.AddRange(imgList);
+
+                    }
+                }
+                else
+                {
+                    await JsRuntime.ToastrError("Upload Images Failed!");
+                    return;
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+
+            await JsRuntime.ToastrError(ex.Message);
+        }
+    }
+    private async Task AddBookImg(BookDto bookDetails)
+    {
+        foreach (var urlImage in BookModel.UrlImages)
+        {
+            /* instancia */
+            BookImg = new BookImgDto()
+            {
+                BookId = bookDetails.Id,
+                BookImageUrl = urlImage
+            };
+            /* Agregarlo */
+            await BookImgRepository.AddBookImg(BookImg);
+        }
+    }
+}

@@ -1,0 +1,74 @@
+﻿@page "/blazorjs"
+@inject IJSRuntime JsRuntime
+ 
+<h3>BlazorJs</h3>
+
+<div class="row">
+    <button class="btn btn-primary" @onclick="() => ConfirmLabel(confirmationMessage)">
+        Confirm Label
+    </button>
+</div>
+<div class="row mt-4">
+    <button class="btn btn-success" @onclick="ButtonSuccess">
+        Success!
+    </button> 
+    <button class="btn btn-danger" @onclick="ButtonError">
+        Failed!
+    </button>
+</div>
+
+<div class="row mt-4">
+    <button class="btn btn-success" @onclick="ButtonSuccessSwal">
+      Swall Success!
+    </button>
+    <button class="btn btn-danger" @onclick="ButtonErrorSwal">
+      Swall Failed!
+    </button>
+</div>
+
+<div class="row">
+    @if (ConfirmResult)
+    {
+        <p>Confirmation Success!</p>
+    }
+    else
+    {
+        <p>Confirmation Denied!</p>
+    }
+</div>
+
+@code {
+    private string confirmationMessage = "Are you sure of this action?";
+    private bool ConfirmResult { get; set; }
+    private async Task ConfirmLabel(string message)
+    {
+        /* Permite ejecutar JS en Blazor */
+        /*Nombre funcion  | cualquier argumento*/
+        ConfirmResult = await JsRuntime.InvokeAsync<bool>("confirm", message);
+    }
+    private async Task ButtonSuccess()
+    {
+        /* Permite ejecutar JS en Blazor */
+        /*Nombre funcion  | cualquier argumento*/
+        await JsRuntime.ToastrSuccess("Success Message!");
+    }
+    private async Task ButtonError()
+    {
+        /* Permite ejecutar JS en Blazor */
+        /*Nombre funcion  | cualquier argumento*/
+        await JsRuntime.ToastrError("Error Message!");
+    }
+    private async Task ButtonSuccessSwal()
+    {
+        /* Permite ejecutar JS en Blazor */
+        /*Nombre funcion  | cualquier argumento*/
+        await JsRuntime.InvokeVoidAsync("ShowSwal","success", "Homework Completed!");
+    }
+    private async Task ButtonErrorSwal()
+    {
+        /* Permite ejecutar JS en Blazor */
+        /*Nombre funcion  | cualquier argumento*/
+        await JsRuntime.InvokeVoidAsync("ShowSwal", "error", "Homework Failed!");
+
+    }
+}

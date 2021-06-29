@@ -1,4 +1,5 @@
-﻿<div>
+﻿@inject IJSRuntime JsRuntime 
+<div>
     <div class="alert alert-info">
         @Title
     </div>
@@ -39,6 +40,12 @@
     /* Otra forma de usar CallBacks */
     [Parameter]
     public EventCallback<MouseEventArgs> OnClickButtonMethod { get; set; }
+
+    /*  */
+    public async Task ShowToastrSuccess()
+    {
+        await JsRuntime.ToastrSuccess("Success in Coming!");
+    }
 
 
 }
