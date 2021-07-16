@@ -15,6 +15,8 @@ namespace business.Repository.IRepository
         public Task<int> DeleteBookImgById(int imgId);
         /* Eliminar todas las imagenes de un libro segun libroId*/
         public Task<int> DeleteBookImgByBookId(int bookId);
+        /* Eliminar libro Imagen por URL */
+        public Task<int> DeleteBookImgByUrl(string imgUrl);
         /* obtener todas las imagenes de un libro */
         public Task<IEnumerable<BookImgDto>> GetBookList(int bookId);
 

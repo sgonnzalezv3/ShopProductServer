@@ -49,6 +49,19 @@ namespace business.Repository
             return 0;
         }
 
+        public async Task<int> DeleteBookImgByUrl(string imgUrl)
+        {
+            /* Obtener todas las imagenes a eliminar */
+            var images = await _context.BookImg.FirstOrDefaultAsync(x => x.BookImageUrl.ToLower() == imgUrl.ToLower());
+            if(images == null)
+            {
+                return 0;
+            }
+            _context.BookImg.Remove(images);
+            return await _context.SaveChangesAsync();
+
+        }
+
         public async Task<IEnumerable<BookImgDto>> GetBookList(int bookId)
         {
             var bookImgList = await _context.BookImg.Where(x => x.BookId == bookId).ToListAsync();

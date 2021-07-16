@@ -34,13 +34,53 @@
                 <ValidationMessage For="() => BookModel.Author"></ValidationMessage>
 
             </div>
-            <div class="form-group">
+            <div class="form-group" style="height:250px;">
                 <label>Details</label>
-                <InputTextArea @bind-Value="BookModel.Details" class="form-control"></InputTextArea>
+                @*<InputTextArea @bind-Value="BookModel.Details" class="form-control"></InputTextArea>*@
+
+                <BlazoredTextEditor @ref="@QuillHtml" Placeholder="Please insert details of the book">
+                    <ToolbarContent>
+                        <select class="ql-header">
+                            <option selected=""></option>
+                            <option value="1"></option>
+                            <option value="2"></option>
+                            <option value="3"></option>
+                            <option value="4"></option>
+                            <option value="5"></option>
+                        </select>
+                        <span class="ql-formats">
+                            <button class="ql-bold"></button>
+                            <button class="ql-italic"></button>
+                            <button class="ql-underline"></button>
+                            <button class="ql-strike"></button>
+                        </span>
+                        <span class="ql-formats">
+                            <select class="ql-color"></select>
+                            <select class="ql-background"></select>
+                        </span>
+                        <span class="ql-formats">
+                            <button class="ql-list" value="ordered"></button>
+                            <button class="ql-list" value="bullet"></button>
+                        </span>
+                        <span class="ql-formats">
+                            <button class="ql-link"></button>
+                        </span>
+                    </ToolbarContent>
+                    <EditorContent>
+                    </EditorContent>
+                </BlazoredTextEditor>
             </div>
-            <div class="form-group">
+            <div class="form-group" style="padding-top:70px;">
                 <InputFile OnChange="HandleImgUpload" multiple></InputFile>
                 <div class="row">
+                    @if (LoadImageProccess)
+                {
+                        <div class="col-md-12">
+                            <span><i class="fade fa-spin fa-spinner"></i>
+                                Loading Images...
+                            </span>
+                        </div>
+                }
                     @if (BookModel.UrlImages != null && BookModel.UrlImages.Count > 0)
                     {
                         int counter = 1;
@@ -50,7 +90,7 @@
                                 <div class="book-img" style="background: url('@bookimage') 50% 50%">
                                     <span class="book-img-title">@counter</span>
                                 </div>
-                                <button type="button" class="btn btn-outline-danger btn-block" mt-4>Delete</button>
+                                <button type="button" @onclick="() => DeleteImage(bookimage)" class="btn btn-outline-danger btn-block" mt-4>Delete</button>
                             </div>
                             counter++;
                         }
@@ -71,6 +111,11 @@
     private BookImgDto BookImg { get; set; } = new BookImgDto();
     private BookDto BookModel { get; set; } = new BookDto();
     private string Title { get; set; } = "Add";
+    /* Lista de imagenes que el usuario quiere eliminar */
+    private List<string> ImgNamesDelete { get; set; } = new List<string>();
+
+    public BlazoredTextEditor QuillHtml { get; set; } = new BlazoredTextEditor();
+    private bool LoadImageProccess { get; set; } = false;
 
     protected async override Task OnInitializedAsync()
     {
@@ -81,12 +126,48 @@
             Title = "Update";
             /* Busqueda por ID para actualizar y lo ponemos en el objeto ya existente*/
             BookModel = await BookRepository.GetBook(Id.Value);
+            /* cargar imagenes para BookModel */
+            if (BookModel?.BookImgList != null)
+            {
+                /* Insertando url de imagenes */
+                BookModel.UrlImages = BookModel.BookImgList.Select(x => x.BookImageUrl).ToList();
+            }
         }/* En caso contrario tenemos que crear */
         else
         {
             /* Si es nulo o no exista */
             BookModel = new BookDto();
         }
+    }
+
+    protected async override Task OnAfterRenderAsync(bool firstRender)
+    {
+        /* Si no es la primera renderizacion, vuelve hasta ahi */
+        if (!firstRender)
+            return;
+        /* Sino asignamos un loading */
+        bool loading = true;
+        /* mientras que loading sea true */
+        while (loading)
+        {
+            try
+            {
+                /* Notificar que se ejecuta */
+                if (!string.IsNullOrEmpty(BookModel.Details))
+                {
+                    await this.QuillHtml.LoadHTMLContent(BookModel.Details);
+                }
+                loading = false;
+            }
+            catch
+            {
+                /* Tiempo de espera */
+                await Task.Delay(10);
+                loading = true;
+
+            }
+        }
+
     }
 
     public async Task HandleBook()
@@ -108,11 +189,40 @@
             /* Definir si vamos a actualizar o a agregar */
             if (BookModel.Id != 0 && Title == "Update")
             {
+                /* Actualizar */
+                BookModel.Details = await QuillHtml.GetHTML();
+
                 var resultUpdate = await BookRepository.UpdateBook(BookModel.Id, BookModel);
+
+                if (BookModel.UrlImages != null && BookModel.UrlImages.Any())
+                {
+                    /* Verificar si hay imagenes a eliminar */
+                    if (ImgNamesDelete != null && ImgNamesDelete.Any())
+                    {
+                        foreach (var imgToDelete in ImgNamesDelete)
+                        {
+                            /* Obteniendo el nombre de la imagen */
+                            var nameImage = imgToDelete.Replace($"BookImages/", "");
+                            /* Eliminando el archivo de la carpeta */
+                            var result = FileUpload.DeleteFile(nameImage);
+                            /* Eliminando la imagen de la bd */
+                            await BookImgRepository.DeleteBookImgByUrl(imgToDelete);
+
+
+                        }
+                    }
+                    /* Agregamos las imagenes */
+                    await AddBookImg(resultUpdate);
+                }
                 await JsRuntime.ToastrSuccess("Book Update Successfully");
             }
             else
             {
+                /*agregar*/
+
+                /* Obtener todo el valor que hay dentro de QuillHtml y asignarlo a la propiedad Detalle de BookModel */
+                BookModel.Details = await QuillHtml.GetHTML();
+
                 /* Si no existe, envia el objeto libro al metodo AddBook */
                 var addResult = await BookRepository.AddBook(BookModel);
                 /* Agregar las imagenes con esto podemos extraer el id de un libro y sus detalles*/
@@ -129,8 +239,23 @@
         /* Redireccionando */
         NavigationManager.NavigateTo("book");
     }
+
+    /* establecer valor del editor de texto */
+
+
+    //public void SetHTML()
+    //{
+    //    if (!string.IsNullOrEmpty(BookModel.Details))
+    //    {
+    //        this.QuillHtml.LoadHTMLContent(BookModel.Details);
+    //    }
+    //    /* Volver a renderizar el componente */
+    //    StateHasChanged();
+    //}
+
     private async Task HandleImgUpload(InputFileChangeEventArgs e)
     {
+        LoadImageProccess = true;
         try
         {
             /* Instancia de lista de Imagenes */
@@ -184,6 +309,7 @@
                     return;
                 }
             }
+            LoadImageProccess = false;
         }
         catch (Exception ex)
         {
@@ -195,14 +321,49 @@
     {
         foreach (var urlImage in BookModel.UrlImages)
         {
-            /* instancia */
-            BookImg = new BookImgDto()
+            /* Validar si la imagen que se intenta agregar ya existe */
+            if (BookModel.BookImgList == null || BookModel.BookImgList.Where(x => x.BookImageUrl == urlImage).Count() == 0)
             {
-                BookId = bookDetails.Id,
-                BookImageUrl = urlImage
-            };
-            /* Agregarlo */
-            await BookImgRepository.AddBookImg(BookImg);
+                /* instancia */
+                BookImg = new BookImgDto()
+                {
+                    BookId = bookDetails.Id,
+                    BookImageUrl = urlImage
+                };
+                /* Agregarlo */
+                await BookImgRepository.AddBookImg(BookImg);
+            }
+
+        }
+    }
+    internal async Task DeleteImage(string urlImage)
+    {
+        try
+        {
+            /* Obtener indice de la imagen */
+            var IndexImage = BookModel.UrlImages.FindIndex(x => x == urlImage);
+            /* Nombre exacto de la imagen */
+            var nameImage = urlImage.Replace($"{NavigationManager.BaseUri}BookImages/", "");
+            /* agregación de un libro */
+            if (BookModel.Id == 0 && Title == "Add")
+            {
+                var result = FileUpload.DeleteFile(nameImage);
+            }
+            else
+            {
+                /* Escenario de actualizar */
+                /* Si tiene error se instancia de nuevo */
+                ImgNamesDelete ??= new List<string>();
+                /* Agregamos el nombre de la imagen a eliminar*/
+                ImgNamesDelete.Add(urlImage);
+            }
+            /* Eliminar la imagen pasandole el indice */
+            BookModel.UrlImages.RemoveAt(IndexImage);
+
+        }
+        catch (Exception e)
+        {
+            await JsRuntime.ToastrError(e.Message);
         }
     }
 }

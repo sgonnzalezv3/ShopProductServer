@@ -2,6 +2,9 @@
 @using Models;
 @using business.Repository.IRepository
 @inject IBookRepository BookRepository
+@inject IJSRuntime JsRuntime
+@inject ShopProductServer.Service.IService.IFileUpload FileUpload
+@inject NavigationManager NavigationManager
 
 <div class="row mt-4">
     <div class="col-8">
@@ -19,42 +22,85 @@
                     <th>Name</th>
                     <th>Price</th>
                     <th>Author</th>
-                    <th>Details</th>
                     <th></th>
                 </tr>
             </thead>
             <tbody>
                 @if (Books.Any())
-                 {
-                    @foreach(var book in Books)
                 {
+                    @foreach (var book in Books)
+                    {
                         <tr>
                             <td>@book.Name</td>
                             <td>@book.Price.ToString("c")</td>
                             <td>@book.Author</td>
-                            <td>@book.Details</td>
                             <td>
                                 <NavLink href="@($"book/update/{book.Id}")" class="btn btn-primary"> Update </NavLink>
+                                <button class="btn btn-danger" @onclick="() => HandleDelete(book.Id)">
+                                    Delete
+                                </button>
                             </td>
                         </tr>
+                    }
                 }
-            }
-            else
-            {
-                <tr>
-                    <td colspan="5">Nothing Here...</td>
-                </tr>
-            }
+                else
+                {
+                    <tr>
+                        <td colspan="5">Nothing Here...</td>
+                    </tr>
+                }
             </tbody>
         </table>
     </div>
 </div>
+<DeleteConfirmation IsProccessingFatherComponent="isProccessing" ChangedConfirmation="ClickDeleteCOnfirmation"></DeleteConfirmation>
 @code {
     private IEnumerable<BookDto> Books { get; set; } = new List<BookDto>();
+    /* ID del libro que el usuario desea eliminar */
+    private int? IdBookDelete { get; set; } = null;
     /* Metodo que realiza acciones cuando se inicializa la pagina */
+
+    /* Notificar a DeleteConfirmation que su procesamiento se ha terminado */
+    private bool isProccessing { get; set; } = false;
     protected override async Task OnInitializedAsync()
     {
         /* Cargando los libros */
         Books = await BookRepository.GetBookList();
+    }
+    private async Task HandleDelete(int bookId)
+    {
+        IdBookDelete = bookId;
+        /* Mostrar modal de confirmacion para elminar */
+        await JsRuntime.InvokeVoidAsync("ShowModalDeleteConfirmation");
+
+    }
+    public async Task ClickDeleteCOnfirmation(bool isConfirmed)
+    {
+        isProccessing = true;
+        /*  */
+        if (isConfirmed && IdBookDelete != null)
+        {
+            BookDto book = await BookRepository.GetBook(IdBookDelete.Value);
+            /* Obtener cada imagen del libro */
+            foreach (var img in book.BookImgList)
+            {
+                /* Obteniendo la ruta de la imagen a eliminar */
+                var nameImage = img.BookImageUrl.Replace($"{NavigationManager.BaseUri}BookImages/", "");
+                /* Proceder a eliminar */
+                FileUpload.DeleteFile(nameImage);
+
+            }
+            /* Llamamos el metodo y le enviamos el valor de ID */
+            await BookRepository.DeleteBook(IdBookDelete.Value);
+            /* Notificacion de exitoso cuando el libro se haya eliminado */
+            await JsRuntime.ToastrSuccess("Book Deleted Successfull!!");
+            /*Actualizar la lista de libros*/
+            Books = await BookRepository.GetBookList();
+            /* Ocultar el modal */
+
+
+        }
+        await JsRuntime.InvokeVoidAsync("HiddenModalDeleteConfirmation");
+        isProccessing = false;
     }
 }

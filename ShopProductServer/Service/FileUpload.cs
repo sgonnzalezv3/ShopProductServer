@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Components.Forms;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Http;
 using ShopProductServer.Service.IService;
 using System;
 using System.Collections.Generic;
@@ -14,8 +15,10 @@ namespace ShopProductServer.Service
         /* esto nos permite hallar la ruta de la carpeta en wwwrooot 
          usamos el entorno de alojamiento web*/
         private readonly IWebHostEnvironment _webHostEnvironment;
-        public FileUpload(IWebHostEnvironment webHostEnvironment)
+        private readonly IHttpContextAccessor _httpContextAccessor;
+        public FileUpload(IWebHostEnvironment webHostEnvironment, IHttpContextAccessor httpContextAccessor)
         {
+            _httpContextAccessor = httpContextAccessor;
             _webHostEnvironment = webHostEnvironment;
         }
         public bool DeleteFile(string fileName)
@@ -67,8 +70,10 @@ namespace ShopProductServer.Service
                     /*escribir archivo*/
                     memoryStream.WriteTo(fs);
                 }
+
+                var url = $"{_httpContextAccessor.HttpContext.Request.Scheme}://{_httpContextAccessor.HttpContext.Request.Host.Value}/";
                 /* Una vez movido el file, solo se necesita la ruta. */
-                var fullMovedPath = $"BookImages/{newUniqueFileName}";
+                var fullMovedPath = $"{url}BookImages/{newUniqueFileName}";
                 return fullMovedPath;
             }
             catch (Exception ex)

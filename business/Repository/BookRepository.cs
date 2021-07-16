@@ -5,6 +5,8 @@ using Microsoft.EntityFrameworkCore;
 using Models;
 using System;
 using System.Collections.Generic;
+using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace business.Repository
@@ -60,6 +62,9 @@ namespace business.Repository
             var getBook = await _context.Book.FindAsync(bookId);
             if(getBook != null)
             {
+                /* Obtener las imagenes asociadas al libro */
+                var images = await _context.BookImg.Where(x => x.BookId == bookId).ToListAsync();
+                _context.BookImg.RemoveRange(images);
                 _context.Book.Remove(getBook);
                 return await _context.SaveChangesAsync();
             }
@@ -69,7 +74,8 @@ namespace business.Repository
         {
             try
             {
-                var getBook = await _context.Book.FindAsync(bookId);
+                /* Obtener el libro con las imagenes */
+                var getBook = await _context.Book.Include(x=> x.BookImgList).FirstOrDefaultAsync(x=> x.Id == bookId);
                 var getBookDto = _mapper.Map<Book,BookDto>(getBook);
                 return getBookDto;
             }
@@ -84,7 +90,8 @@ namespace business.Repository
         {
             try
             {
-                var bookList = await _context.Book.ToListAsync();
+                /* Obtener el libro con las imagenes */
+                var bookList = await _context.Book.Include(x=> x.BookImgList).ToListAsync();
                 var list = (IEnumerable<Book>)bookList;
                 var listDto = _mapper.Map<IEnumerable<Book>, IEnumerable<BookDto>>(list);
                 //IEnumerable<BookDto> bookList = _mapper.Map<IEnumerable<Book>, IEnumerable<BookDto>>(_context.Book);

@@ -5,13 +5,13 @@ VisualStudioVersion = 16.0.31112.23
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ShopProductServer", "ShopProductServer\ShopProductServer.csproj", "{02213070-B113-4EBD-B033-A8B2BA14ABCD}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DataAccess", "DataAccess\DataAccess.csproj", "{7F0BF39B-3333-4EC5-BED1-5628FDBB7C08}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DataAccess", "DataAccess\DataAccess.csproj", "{7F0BF39B-3333-4EC5-BED1-5628FDBB7C08}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Common", "Common\Common.csproj", "{E82C62BA-4B8F-4298-83F2-C77970945DAB}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Common", "Common\Common.csproj", "{E82C62BA-4B8F-4298-83F2-C77970945DAB}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "business", "business\business.csproj", "{A8290B5D-A201-4C1F-A364-BE8EE88A4581}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "business", "business\business.csproj", "{A8290B5D-A201-4C1F-A364-BE8EE88A4581}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Models", "Models\Models.csproj", "{772DB07B-0A02-42F9-A720-FA709A6EB971}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Models", "Models\Models.csproj", "{772DB07B-0A02-42F9-A720-FA709A6EB971}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
